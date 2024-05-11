@@ -4,8 +4,10 @@
     "dev": "bun --hot src/index.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.2.1",
     "hono": "^4.3.0",
-    "mongoose": "^8.3.3"
+    "mongoose": "^8.3.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
