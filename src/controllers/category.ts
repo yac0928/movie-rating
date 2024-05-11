@@ -1,13 +1,12 @@
 import Category from '../models/category'
 import { Context } from 'hono'
-import { HTTPException } from 'hono/http-exception'
+// import { HTTPException } from 'hono/http-exception'
 
 export const categoryController = {
   getCategories: async (c: Context, next: (error?: any) => void) => {
     try {
-      throw new HTTPException(401, { message: 'Custom error message' })
-      // const categories = await Category.find()
-      // return c.json(categories)
+      const categories = await Category.find()
+      return c.json(categories)
     } catch (err) {
       next(err)
     }
