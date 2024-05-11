@@ -1,5 +1,6 @@
 import { User } from '../models'
 import { Context } from 'hono'
+import { sign } from 'hono/jwt'
 
 export const userController = {
   signUp: async (c: Context, next: (error?: any) => void) => {
@@ -48,21 +49,21 @@ export const userController = {
         return c.json({
           errors: [{ message: 'Incorrect username or password!' }],
         })
-      } else if (process.env.JWT_SECRET != null) {
-        return c.json({
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          // token: jwt.sign(
-          //   { id: user._id, name: user.name, email: user.email },
-          //   process.env.JWT_SECRET,
-          //   { expiresIn: '30d' }
-          // ),
-        })
-      } else {
+      } else if (process.env.JWT_SECRET == null) {
         c.status(500)
         return c.json({
           errors: [{ message: 'JWT token encountered a generation error.' }],
+        })
+      } else {
+        const payload = {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        }
+
+        return c.json({
+          ...payload,
+          token: await sign(payload, process.env.JWT_SECRET),
         })
       }
     } catch (err) {
