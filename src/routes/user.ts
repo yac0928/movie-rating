@@ -1,9 +1,10 @@
 import { Hono } from 'hono'
+import { validationErrorHandler } from '../middlewares/validation'
 import { userController } from '../controllers/user'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 
-export const signupSchema = z
+const signupSchema = z
   .object({
     name: z.string(),
     email: z.string().email(),
@@ -15,7 +16,7 @@ export const signupSchema = z
     path: ['confirmedPassword'],
   })
 
-export const signinSchema = z.object({
+const signinSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 })
@@ -23,60 +24,16 @@ export const signinSchema = z.object({
 export function userRoute(app: Hono) {
   app.post(
     '/api/signup',
-    zValidator('json', signupSchema, (result, c) => {
-      if (!result.success) {
-        // Extract error issues from `result.error`
-        const issues = result?.error.issues.map((issue) => {
-          let expectedType
-          let receivedType
-
-          if ('expected' in issue) {
-            expectedType = issue.expected
-          }
-
-          if ('received' in issue) {
-            receivedType = issue.received
-          }
-
-          return {
-            param: issue.path.join('.'),
-            message: issue.message,
-            expectedType,
-            receivedType,
-          }
-        })
-        return c.json({ errors: issues }, 400)
-      }
-    }),
+    zValidator('json', signupSchema, (result, c) =>
+      validationErrorHandler(result, c, 400)
+    ),
     userController.signUp
   )
   app.post(
     '/api/signin',
-    zValidator('json', signinSchema, (result, c) => {
-      if (!result.success) {
-        // Extract error issues from `result.error`
-        const issues = result?.error.issues.map((issue) => {
-          let expectedType
-          let receivedType
-
-          if ('expected' in issue) {
-            expectedType = issue.expected
-          }
-
-          if ('received' in issue) {
-            receivedType = issue.received
-          }
-
-          return {
-            param: issue.path.join('.'),
-            message: issue.message,
-            expectedType,
-            receivedType,
-          }
-        })
-        return c.json({ errors: issues }, 400)
-      }
-    }),
+    zValidator('json', signinSchema, (result, c) =>
+      validationErrorHandler(result, c, 400)
+    ),
     userController.signIn
   )
 }
