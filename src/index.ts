@@ -3,11 +3,15 @@ import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import mongoose from 'mongoose'
 
+import { checkEnvironmentVariables } from './config/environment'
+import { handleApiError } from './middlewares/error-handler'
 import { setupRoutes } from './routes'
 
-const app = new Hono()
+checkEnvironmentVariables()
 
 mongoose.connect(process.env.MONGODB_URI!)
+
+const app = new Hono()
 
 app.use('*', logger())
 app.use(cors())
@@ -17,18 +21,9 @@ setupRoutes(app) // 添加新的路由
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
-;(app.onError as any)(async (err: Error, c: Context, next: () => void) => {
-  // 如果有錯誤發生，則處理錯誤；如果沒有錯誤，將控制權交給下一個中間件或路由
-  return err != null
-    ? err.message != null
-      ? c.json({
-          errors: [{ message: err.message }],
-        })
-      : c.json({
-          errors: [{ message: err }],
-        })
-    : next()
-})
+;(app.onError as any)((err: Error, c: Context, next: () => void) =>
+  handleApiError(err, c, next)
+)
 
 export default {
   port: process.env.PORT || 3000,
