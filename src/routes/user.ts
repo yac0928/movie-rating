@@ -1,8 +1,15 @@
 import { Hono } from 'hono'
-import { validationErrorHandler } from '../middlewares/validation'
-import { userController } from '../controllers/user'
-import { zValidator } from '@hono/zod-validator'
+import { jwt } from 'hono/jwt'
 import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
+
+import { validationErrorHandler } from '../middlewares/validation'
+import { favoriteController } from '../controllers/favorite'
+import { dislikeController } from '../controllers/dislike'
+import { likeController } from '../controllers/like'
+import { userController } from '../controllers/user'
+
+const secret = process.env.JWT_SECRET as string
 
 const signupSchema = z
   .object({
@@ -35,5 +42,47 @@ export function userRoute(app: Hono) {
       validationErrorHandler(result, c, 400)
     ),
     userController.signIn
+  )
+  app.post(
+    '/api/favorites/:movieId',
+    jwt({
+      secret,
+    }),
+    favoriteController.addFavorite
+  )
+  app.delete(
+    '/api/favorites/:movieId',
+    jwt({
+      secret,
+    }),
+    favoriteController.removeFavorite
+  )
+  app.post(
+    '/api/like/:commentId',
+    jwt({
+      secret,
+    }),
+    likeController.likeComment
+  )
+  app.delete(
+    '/api/like/:commentId',
+    jwt({
+      secret,
+    }),
+    likeController.undoLikeComment
+  )
+  app.post(
+    '/api/dislike/:commentId',
+    jwt({
+      secret,
+    }),
+    dislikeController.dislikeComment
+  )
+  app.delete(
+    '/api/dislike/:commentId',
+    jwt({
+      secret,
+    }),
+    dislikeController.undoDislikeComment
   )
 }
