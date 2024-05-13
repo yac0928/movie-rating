@@ -5,7 +5,7 @@ import { ZodError } from 'zod'
 
 // 定義 data 物件的索引簽名
 interface Data {
-  [key: string]: string
+  [key: string]: string | number
 }
 
 // 定義成功時的結果類型
