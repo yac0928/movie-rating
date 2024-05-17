@@ -1,18 +1,30 @@
+import jwt from 'jsonwebtoken'
+
 import { Comment, Dislike } from '../models'
-import { Context } from 'hono'
 
 import { idCheck } from '../middlewares/validation'
+import { errorMessage } from '../helpers/error-message'
 
 export const dislikeController = {
-  dislikeComment: async (c: Context) => {
-    const { id: userId } = c.get('jwtPayload')
+  dislikeComment: async (c: any) => {
+    const token = c.req.header('Authorization')?.split(' ')[1]
+
+    if (token == null) {
+      const message = 'no authorization included in request.'
+      const name = 'ServerError'
+
+      return errorMessage(c, 401, message, name)
+    }
+
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!)
+    const { id: userId } = payload
     const { commentId } = c.req.param()
 
     if (idCheck(commentId)) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Invalid commentId.' }],
-      })
+      const message = 'Invalid commentId.'
+      const name = 'ZodError'
+
+      return errorMessage(c, 400, message, name)
     }
 
     const [currentComment, likedComment] = await Promise.all([
@@ -21,48 +33,57 @@ export const dislikeController = {
     ])
 
     if (currentComment == null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: "Comment doesn't existed." }],
-      })
+      const message = "Comment doesn't existed."
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 404, message, name)
     }
 
     if (likedComment != null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'You already disliked this comment.' }],
-      })
+      const message = 'You already disliked this comment.'
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 400, message, name)
     }
 
-    return c.json(await Dislike.create({ userId, commentId }))
+    return c.json({
+      success: true,
+      data: await Dislike.create({ userId, commentId }),
+    })
   },
-  undoDislikeComment: async (c: Context) => {
-    const { id: userId } = c.get('jwtPayload')
+  undoDislikeComment: async (c: any) => {
+    const token = c.req.header('Authorization')?.split(' ')[1]
+
+    if (token == null) {
+      const message = 'no authorization included in request.'
+      const name = 'ServerError'
+
+      return errorMessage(c, 401, message, name)
+    }
+
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!)
+    const { id: userId } = payload
     const { commentId } = c.req.param()
 
     if (idCheck(commentId)) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Invalid commentId.' }],
-      })
+      const message = 'Invalid commentId.'
+      const name = 'ZodError'
+
+      return errorMessage(c, 400, message, name)
     }
 
     const likedComment = await Dislike.findOne({ userId, commentId })
 
     if (likedComment == null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: "You haven't disliked this comment yet." }],
-      })
+      const message = "You haven't disliked this comment yet."
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 400, message, name)
     }
 
-    if (String(likedComment.userId) !== userId) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Insufficient permissions.' }],
-      })
-    }
-
-    return c.json(await Dislike.findOneAndDelete({ userId, commentId }))
+    return c.json({
+      success: true,
+      data: await Dislike.findOneAndDelete({ userId, commentId }),
+    })
   },
 }

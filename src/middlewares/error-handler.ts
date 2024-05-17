@@ -1,14 +1,11 @@
 import { Context } from 'hono'
+import { StatusCode } from 'hono/utils/http-status'
+import { errorMessage } from '../helpers/error-message'
 
-export function handleApiError(err: Error, c: Context, next: () => void) {
-  // 如果有錯誤發生，則處理錯誤；如果沒有錯誤，將控制權交給下一個中間件或路由
-  return err != null
-    ? err.message != null
-      ? c.json({
-          errors: [{ message: err.message }],
-        })
-      : c.json({
-          errors: [{ message: err }],
-        })
-    : next()
+interface ApiError extends Error {
+  status?: StatusCode
+}
+
+export function handleApiError(err: ApiError, c: Context) {
+  return errorMessage(c, err.status ?? 500, err.message ?? err)
 }

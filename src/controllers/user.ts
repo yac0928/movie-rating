@@ -1,17 +1,19 @@
-import { User } from '../models'
-import { Context } from 'hono'
 import { sign } from 'hono/jwt'
 
+import { User } from '../models'
+
+import { errorMessage } from '../helpers/error-message'
+
 export const userController = {
-  signUp: async (c: Context) => {
+  signUp: async (c: any) => {
     const { name, email, password } = await c.req.json()
     const registeredEmail = await User.findOne({ email }).lean()
 
     if (registeredEmail != null) {
-      c.status(409)
-      return c.json({
-        errors: [{ message: 'Email has already been registered.' }],
-      })
+      const message = 'Email has already been registered.'
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 409, message, name)
     }
 
     const newUser = await User.create({
@@ -25,29 +27,29 @@ export const userController = {
 
     const { password: removedPassword, ...user } = newUser.toJSON()
 
-    return c.json(user)
+    return c.json({ success: true, data: user })
   },
-  signIn: async (c: Context) => {
+  signIn: async (c: any) => {
     const { email, password } = await c.req.json()
     const user = await User.findOne({ email }).lean()
 
     if (user == null) {
-      c.status(401)
-      return c.json({
-        errors: [{ message: 'Incorrect username or password!' }],
-      })
+      const message = 'Incorrect username or password!'
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 401, message, name)
     }
 
     if (!(await Bun.password.verify(password, user.password))) {
-      c.status(401)
-      return c.json({
-        errors: [{ message: 'Incorrect username or password!' }],
-      })
+      const message = 'Incorrect username or password!'
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 401, message, name)
     } else if (process.env.JWT_SECRET == null) {
-      c.status(500)
-      return c.json({
-        errors: [{ message: 'JWT token encountered a generation error.' }],
-      })
+      const message = 'JWT token encountered a generation error.'
+      const name = 'ServerError'
+
+      return errorMessage(c, 500, message, name)
     } else {
       const payload = {
         id: user._id,
@@ -56,8 +58,11 @@ export const userController = {
       }
 
       return c.json({
-        ...payload,
-        token: await sign(payload, process.env.JWT_SECRET),
+        success: true,
+        data: {
+          ...payload,
+          token: await sign(payload, process.env.JWT_SECRET),
+        },
       })
     }
   },

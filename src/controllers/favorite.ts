@@ -1,18 +1,30 @@
+import jwt from 'jsonwebtoken'
+
 import { Favorite, Movie } from '../models'
-import { Context } from 'hono'
 
 import { idCheck } from '../middlewares/validation'
+import { errorMessage } from '../helpers/error-message'
 
 export const favoriteController = {
-  addFavorite: async (c: Context) => {
-    const { id: userId } = c.get('jwtPayload')
+  addFavorite: async (c: any) => {
+    const token = c.req.header('Authorization')?.split(' ')[1]
+
+    if (token == null) {
+      const message = 'no authorization included in request.'
+      const name = 'ServerError'
+
+      return errorMessage(c, 401, message, name)
+    }
+
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!)
+    const { id: userId } = payload
     const { movieId } = c.req.param()
 
     if (idCheck(movieId)) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Invalid movieId.' }],
-      })
+      const message = 'Invalid movieId.'
+      const name = 'ZodError'
+
+      return errorMessage(c, 400, message, name)
     }
 
     const [currentMovie, favoriteMovie] = await Promise.all([
@@ -21,48 +33,57 @@ export const favoriteController = {
     ])
 
     if (currentMovie == null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: "Movie doesn't existed." }],
-      })
+      const message = "Movie doesn't existed."
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 404, message, name)
     }
 
     if (favoriteMovie != null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'The movie is already in your favorites list.' }],
-      })
+      const message = 'The movie is already in your favorites list.'
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 400, message, name)
     }
 
-    return c.json(await Favorite.create({ userId, movieId }))
+    return c.json({
+      success: true,
+      data: await Favorite.create({ userId, movieId }),
+    })
   },
-  removeFavorite: async (c: Context) => {
-    const { id: userId } = c.get('jwtPayload')
+  removeFavorite: async (c: any) => {
+    const token = c.req.header('Authorization')?.split(' ')[1]
+
+    if (token == null) {
+      const message = 'no authorization included in request.'
+      const name = 'ServerError'
+
+      return errorMessage(c, 401, message, name)
+    }
+
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!)
+    const { id: userId } = payload
     const { movieId } = c.req.param()
 
     if (idCheck(movieId)) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Invalid movieId.' }],
-      })
+      const message = 'Invalid movieId.'
+      const name = 'ZodError'
+
+      return errorMessage(c, 400, message, name)
     }
 
     const favoriteMovie = await Favorite.findOne({ userId, movieId })
 
     if (favoriteMovie == null) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: "You haven't favorited this movie yet." }],
-      })
+      const message = "You haven't favorited this movie yet."
+      const name = 'DataBaseError'
+
+      return errorMessage(c, 400, message, name)
     }
 
-    if (String(favoriteMovie.userId) !== userId) {
-      c.status(400)
-      return c.json({
-        errors: [{ message: 'Insufficient permissions.' }],
-      })
-    }
-
-    return c.json(await Favorite.findOneAndDelete({ userId, movieId }))
+    return c.json({
+      success: true,
+      data: await Favorite.findOneAndDelete({ userId, movieId }),
+    })
   },
 }
