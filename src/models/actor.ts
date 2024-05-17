@@ -1,12 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose'
 
-export interface ICrew extends Document {
+export interface IActor extends Document {
   name: string
   description: string
   avatar: string
 }
 
-const crewSchema: Schema<ICrew> = new Schema({
+const actorSchema: Schema<IActor> = new Schema({
   name: {
     type: String,
     required: true,
@@ -21,6 +21,6 @@ const crewSchema: Schema<ICrew> = new Schema({
   },
 })
 
-const Crew = mongoose.model<ICrew>('Crew', crewSchema)
+const Actor = mongoose.model<IActor>('Actor', actorSchema)
 
-export default Crew
+export default Actor

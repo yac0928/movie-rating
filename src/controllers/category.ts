@@ -1,6 +1,5 @@
 import Category from '../models/category'
 import { Context } from 'hono'
-// import { HTTPException } from 'hono/http-exception'
 
 export const categoryController = {
   getCategories: async (c: Context) => {

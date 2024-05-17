@@ -1,6 +1,4 @@
 import mongoose, { Document, Schema } from 'mongoose'
-import Crew from './crew'
-import Category from './category'
 
 export interface IMovie extends Document {
   title: string
@@ -8,9 +6,7 @@ export interface IMovie extends Document {
   duration: number
   info: string
   avg_rating: number
-  categoryId: Schema.Types.ObjectId
   view: number
-  crewId: Schema.Types.ObjectId
   trailer_link: string
   photo: string
 }
@@ -36,19 +32,9 @@ const movieSchema: Schema<IMovie> = new Schema({
     type: Number,
     default: 0,
   },
-  categoryId: {
-    type: Schema.Types.ObjectId,
-    ref: Category,
-    required: true,
-  },
   view: {
     type: Number,
     default: 0,
-  },
-  crewId: {
-    type: Schema.Types.ObjectId,
-    ref: Crew,
-    required: true,
   },
   trailer_link: {
     type: String,
