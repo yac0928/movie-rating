@@ -1,10 +1,11 @@
 import { Context } from 'hono'
 import { StatusCode } from 'hono/utils/http-status'
+import mongoose, { Types } from 'mongoose'
 import { ZodError } from 'zod'
 
 // 定義 data 物件的索引簽名
 interface Data {
-  [key: string]: string
+  [key: string]: string | number
 }
 
 // 定義成功時的結果類型
@@ -51,4 +52,8 @@ export function validationErrorHandler(
     })
     return c.json({ errors: issues }, status)
   }
+}
+
+export function idCheck(id: Types.ObjectId | string): boolean {
+  return !mongoose.Types.ObjectId.isValid(id)
 }
