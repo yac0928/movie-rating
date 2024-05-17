@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import { jwt } from 'hono/jwt'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
@@ -13,7 +13,7 @@ const commentSchema = z.object({
   comment: z.string(),
 })
 
-export function commentRoute(app: Hono) {
+export function commentRoute(app: OpenAPIHono) {
   app.get('/api/comments', commentController.getComments)
   app.post(
     '/api/comments/:movieId',
