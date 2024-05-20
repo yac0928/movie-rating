@@ -1,32 +1,42 @@
 import mongoose, { Document, Schema } from 'mongoose'
+import Category from './category'
 
 export interface IMovie extends Document {
+  id: number
   title: string
-  date: Date
-  duration: number
-  info: string
+  release_date: Date
+  runtime: number
+  overview: string
+  budget: number
   avg_rating: number
   view: number
   trailer_link: string
-  photo: string
+  poster_path: string
+  category_ids: number[]
 }
 
 const movieSchema: Schema<IMovie> = new Schema({
+  id: {
+    type: Number,
+    required: true,
+    unique: true,
+  },
   title: {
     type: String,
     required: true,
   },
-  date: {
+  release_date: {
     type: Date,
     required: true,
   },
-  duration: {
+  runtime: {
     type: Number,
-    required: true,
   },
-  info: {
+  overview: {
     type: String,
-    required: true,
+  },
+  budget: {
+    type: Number,
   },
   avg_rating: {
     type: Number,
@@ -38,24 +48,23 @@ const movieSchema: Schema<IMovie> = new Schema({
   },
   trailer_link: {
     type: String,
-    required: true,
-    validate: {
-      validator: (value: string) => {
-        return /^(http|https):\/\/[^ "]+$/.test(value)
-      },
-      message: 'Invalid URL format',
-    },
   },
-  photo: {
+  poster_path: {
     type: String,
-    required: true,
-    validate: {
-      validator: (value: string) => {
-        return /\.(jpg|jpeg|png|gif)$/i.test(value)
-      },
-      message: 'Invalid photo format',
-    },
   },
+  category_ids: [
+    {
+      type: Number,
+      ref: 'Category',
+      localField: 'category_ids',
+      foreignField: 'id',
+    },
+  ],
+})
+movieSchema.virtual('category_id', {
+  ref: 'Category',
+  localField: 'category_ids',
+  foreignField: 'id',
 })
 
 const Movie = mongoose.model<IMovie>('Movie', movieSchema)
