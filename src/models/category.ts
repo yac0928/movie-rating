@@ -1,16 +1,17 @@
 import mongoose, { Document, Schema } from 'mongoose'
 
 export interface ICategory extends Document {
+  id: number,
   name: string
-  icon: string
 }
 
 const categorySchema: Schema<ICategory> = new Schema({
-  name: {
-    type: String,
-    required: true,
+  id: {
+    type: Number,
+    unique: true,
+    required: true
   },
-  icon: {
+  name: {
     type: String,
     required: true,
   },
